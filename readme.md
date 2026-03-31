@@ -26,8 +26,8 @@ A lightweight, bilingual (English/Chinese) PyQt5 GUI tool designed to sanitize a
 Simply clone the repository and run the startup script:
 
 ```bash
-git clone [https://github.com/YourUsername/IsaacSim-URDF-Cleaner.git](https://github.com/YourUsername/IsaacSim-URDF-Cleaner.git)
-cd IsaacSim-URDF-Cleaner
+git clone https://github.com/lwbscu/IsaacSim_URDF_from_SolidWork.git
+cd IsaacSim_URDF_from_SolidWork
 chmod +x run.sh
 ./run.sh
 ```

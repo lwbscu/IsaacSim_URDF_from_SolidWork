@@ -6,7 +6,7 @@
 
 *选择语言: [English](readme.md), [简体中文](README_zh.md).*
 
-一款轻量级、中英双语的 PyQt5 图形化工具，专为深度清洗和重构 URDF 机器人资产（尤其是 SolidWorks 导出的模型）而设计。它能确保你的机器人模型零报错、丝滑地导入 **NVIDIA Isaac Sim**，彻底告别由底层 USD 严苛规范和 ROS 绝对路径依赖引起的 `Null Prim` 崩溃问题。
+一款轻量级、中英双语的 PyQt5 图形化工具，专为深度清洗和重构 URDF 机器人资产（目前针对SolidWorks 导出的模型）而设计。它能确保你的机器人模型零报错、丝滑地导入 **NVIDIA Isaac Sim**，彻底告别由底层 USD 严苛规范和 ROS 绝对路径依赖引起的 `Null Prim` 崩溃问题。
 
 ## 核心特性
 
@@ -26,8 +26,8 @@
 克隆仓库并执行启动脚本即可：
 
 ```bash
-git clone [https://github.com/YourUsername/IsaacSim-URDF-Cleaner.git](https://github.com/YourUsername/IsaacSim-URDF-Cleaner.git)
-cd IsaacSim-URDF-Cleaner
+git clone https://github.com/lwbscu/IsaacSim_URDF_from_SolidWork.git
+cd IsaacSim_URDF_from_SolidWork
 chmod +x run.sh
 ./run.sh
 ```
