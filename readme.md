@@ -36,12 +36,12 @@ chmod +x run.sh
 
 ## How to Use
 
-Launch the tool using ./run.sh.
-Select Target Folder: Browse and select the root directory of your robot assets.
-Select Original URDF: Browse and select the specific .urdf file (the root folder path will auto-fill if standard structure is detected).
-Input New Name: Provide a clean, USD-compliant name (e.g., robot_v2 - strictly English/underscores, no .urdf suffix).
-Click [2. One-Click Clean & Rebuild].
-Open NVIDIA Isaac Sim -> File -> Import -> select your newly generated .urdf file. Enjoy the flawless import!
+1. Launch the tool using `./run.sh`.
+2. Select **Target Folder**: Browse and select the root directory of your robot assets.
+3. Select **Original URDF**: Browse and select the specific `.urdf` file (the root folder path will auto-fill if standard structure is detected).
+4. Input **New Name**: Provide a clean, USD-compliant name (e.g., `robot_v2`, strictly English/underscores, no `.urdf` suffix).
+5. Click `2. One-Click Clean & Rebuild`.
+6. Open NVIDIA Isaac Sim -> **File** -> **Import** -> select your newly generated `.urdf` file.
 
 ## Author
 
