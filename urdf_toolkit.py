@@ -16,7 +16,6 @@ class URDFCleanerApp(QWidget):
         self.initUI()
 
     def setup_i18n(self):
-        """配置全面的中英文本字典（包含所有UI和日志输出）"""
         self.t = {
             'zh': {
                 'title': 'Isaac Sim URDF 资产清洗专家',
@@ -36,7 +35,6 @@ class URDFCleanerApp(QWidget):
                 'err_no_input': '清洗操作必须提供【原urdf路径】和【期望改名后的名称】！',
                 'err_bad_name': '新资产名不符合 USD 规范 (不能包含中文、空格或连字符)！',
 
-                # --- 日志输出 ---
                 'log_scan_start': '开始执行深度扫描: {0}',
                 'scan_bad_name': '  [发现非法物理命名] {0}',
                 'scan_all_good': '  -> [正常] 所有物理文件命名合规。',
@@ -87,7 +85,6 @@ class URDFCleanerApp(QWidget):
                 'err_no_input': 'Both [Original URDF Path] and [New URDF Name] are required for cleaning!',
                 'err_bad_name': 'New name violates USD specs (No Chinese, spaces, or hyphens allowed)!',
 
-                # --- Log Outputs ---
                 'log_scan_start': 'Starting Deep Scan: {0}',
                 'scan_bad_name': '  [Bad Naming] {0}',
                 'scan_all_good': '  -> [OK] All physical file names are USD-compliant.',
@@ -126,7 +123,6 @@ class URDFCleanerApp(QWidget):
         self.resize(900, 600)
         layout = QVBoxLayout()
 
-        # --- 语言切换区 ---
         lang_layout = QHBoxLayout()
         lang_layout.addStretch()
         self.lbl_lang = QLabel("🌐 Language / 语言: ")
@@ -137,7 +133,6 @@ class URDFCleanerApp(QWidget):
         lang_layout.addWidget(self.cb_lang)
         layout.addLayout(lang_layout)
 
-        # --- 输入网格区 ---
         grid = QGridLayout()
 
         self.lbl_dir = QLabel()
@@ -163,7 +158,6 @@ class URDFCleanerApp(QWidget):
 
         layout.addLayout(grid)
 
-        # --- 操作按钮区 ---
         btn_layout = QHBoxLayout()
         self.btn_scan = QPushButton()
         self.btn_scan.clicked.connect(self.run_scan)
@@ -184,7 +178,6 @@ class URDFCleanerApp(QWidget):
         btn_layout.addWidget(self.btn_clear_log)
         layout.addLayout(btn_layout)
 
-        # --- 日志输出区 ---
         self.log_area = QTextEdit()
         self.log_area.setReadOnly(True)
         self.log_area.setFont(QFont("Consolas", 10))
@@ -193,15 +186,12 @@ class URDFCleanerApp(QWidget):
 
         self.setLayout(layout)
         self.update_ui_texts() 
-
-        # 启动即显示多语言欢迎提示词
         self.show_welcome_message()
 
     def show_welcome_message(self):
-        """展示硬编码的双语欢迎和提示信息，确保任何语言用户第一眼都能看懂"""
         self.log_area.clear()
         welcome_text = (
-            " 欢迎使用 Isaac Sim URDF 资产清洗专家！\n"
+            "🚀 欢迎使用 Isaac Sim URDF 资产清洗专家！\n"
             "   Welcome to Isaac Sim URDF Asset Cleaner!\n\n"
             "【使用指南 / How to Use】\n"
             "  1. 点击【浏览】选择目标文件夹和原 URDF 文件。\n"
@@ -217,7 +207,6 @@ class URDFCleanerApp(QWidget):
     def change_language(self, index):
         self.lang = 'en' if index == 1 else 'zh'
         self.update_ui_texts()
-        # 注：不再需要根据语言切换刷新欢迎词，因为它已经是双语固定显示的了
 
     def update_ui_texts(self):
         texts = self.t[self.lang]
@@ -349,7 +338,6 @@ class URDFCleanerApp(QWidget):
                     os.rename(os.path.join(root, name), os.path.join(root, new_filename))
                     rename_count += 1
                     self.log(texts['clean_rename'].format(name, new_filename))
-
         self.log(texts['clean_rename_done'].format(rename_count))
 
         if rename_count == 0:
@@ -366,8 +354,48 @@ class URDFCleanerApp(QWidget):
         pkg_count = content.count(f"package://{new_name}/")
         content = content.replace(f"package://{new_name}/", "../")
         with open(urdf_path, 'w', encoding='utf-8') as f: f.write(content)
-
         self.log(texts['clean_rebuild'].format(pkg_count))
+
+        try:
+            tree = ET.parse(urdf_path)
+            root = tree.getroot()
+            healed = False
+            urdf_dir = os.path.dirname(urdf_path)
+
+            for link in root.findall('link'):
+                for tag in ['visual', 'collision']:
+                    elements = list(link.findall(tag))
+                    for el in elements:
+                        mesh = el.find('.//mesh')
+                        if mesh is not None:
+                            mesh_file = mesh.get('filename')
+                            if mesh_file:
+                                abs_path = os.path.normpath(os.path.join(urdf_dir, mesh_file))
+
+                                is_missing = not os.path.exists(abs_path)
+                                is_empty_or_corrupt = False
+                                if not is_missing:
+                                    is_empty_or_corrupt = os.path.getsize(abs_path) < 500
+
+                                if is_missing or is_empty_or_corrupt:
+                                    missing_name = os.path.basename(mesh_file)
+                                    reason = "物理丢失" if is_missing else "空壳损坏文件"
+
+                                    msg = f"[自愈修复] 切除崩溃源 ({reason}): {missing_name} -> 已安全移除其 <{tag}> 节点" if self.lang == 'zh' else \
+                                          f"[Auto-Heal] Removed crash source ({reason}): {missing_name} -> <{tag}> node deleted"
+                                    self.log(msg)
+
+                                    link.remove(el)
+                                    healed = True
+
+            if healed:
+                tree.write(urdf_path, encoding='utf-8', xml_declaration=True)
+                msg_done = "[自愈修复] URDF 中的致命幽灵网格已全部剿灭！" if self.lang == 'zh' else \
+                           "[Auto-Heal] All fatal ghost meshes cleared from URDF!"
+                self.log(msg_done)
+        except Exception as e:
+            err_msg = f"[自愈模块错误] {e}" if self.lang == 'zh' else f"[Auto-Heal Error] {e}"
+            self.log(err_msg)
 
         parent_dir = os.path.dirname(target_dir)
         new_target_dir = os.path.join(parent_dir, new_name)
@@ -420,7 +448,7 @@ class URDFCleanerApp(QWidget):
             suspect_keywords = ['wheel', 'gripper', 'finger', 'claw']
             found = False
             for j in joints:
-                if any(kw in j.get('name').lower() for kw in suspect_keywords):
+                if any(suspect in j.get('name').lower() for suspect in suspect_keywords):
                     if not found: self.log(texts['chk_suspect_head'])
                     found = True
                     self.log(texts['chk_suspect_found'].format(j.get('name'), j.get('type')))
